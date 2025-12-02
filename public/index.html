@@ -305,10 +305,14 @@
         import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =========================================================================
-        // --- Firebase Configuration (User-Provided Values Overwrite Canvas Vars) ---
-        // Canvas環境外で実行する場合は具体的な値を記述します。
-        const appId = "marketer-training"; 
-        const firebaseConfig = {
+        // --- Firebase Configuration (Canvas Environment Variables) ---
+        // Canvas環境のグローバル変数を優先し、未定義の場合のみフォールバック値を使用します。
+        const isCanvasEnvironment = typeof __firebase_config !== 'undefined';
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketer-training-fallback';
+        
+        // Canvas環境の__firebase_configが存在する場合はそれをパースし、なければユーザー提供の値をフォールバックとして使用
+        const firebaseConfig = isCanvasEnvironment ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs",
             authDomain: "marketer-training.firebaseapp.com",
             projectId: "marketer-training",
@@ -316,8 +320,8 @@
             messagingSenderId: "846173040460",
             appId: "1:846173040460:web:9e7116f51058b3535429e9"
         };
-        const initialAuthToken = null; // Canvas環境の自動トークンを使用しない場合はnull
-
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
         let app;
         // =========================================================================
         
@@ -363,9 +367,10 @@
                 
                 // Use the custom token if provided (e.g., in a Canvas environment), otherwise sign in anonymously
                 if (initialAuthToken) {
+                    console.log("Attempting sign-in with Custom Token...");
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
-                    // Sign in anonymously for simple, persistent user tracking
+                    console.warn("No Custom Token found. Falling back to Anonymous Sign-in...");
                     await signInAnonymously(auth);
                 }
 
