@@ -299,32 +299,34 @@
 
     <!-- JavaScript Logic -->
     <script type="module">
-       // Firebase Imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, orderBy, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Global Firebase and App Variables (Canvas Environment)
-// Canvas環境以外では具体的な値を記述する
-const appId = "marketer-training"; // あなたのFirebaseプロジェクトID または任意のユニークなID
-                                   // Firestoreのパス artifacts/{appId}/users/{userId}/tasks で使用
-const firebaseConfig = {
-  apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs", // Firebaseコンソールから取得したapiKeyを貼り付け
-  authDomain: "marketer-training.firebaseapp.com", // あなたのauthDomain
-  projectId: "marketer-training", // あなたのprojectId
-  storageBucket: "marketer-training.appspot.com", // あなたのstorageBucket
-  messagingSenderId: "846173040460", // あなたのmessagingSenderId
-  appId: "1:846173040460:web:9e7116f51058b3535429e9" // ウェブアプリのappId (通常はfirebaseConfigから取得)
-};
-const initialAuthToken = null; // 通常、初回はnullでOK
+        // =========================================================================
+        // --- Firebase Configuration (User-Provided Values Overwrite Canvas Vars) ---
+        // Canvas環境外で実行する場合は具体的な値を記述します。
+        const appId = "marketer-training"; 
+        const firebaseConfig = {
+            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs",
+            authDomain: "marketer-training.firebaseapp.com",
+            projectId: "marketer-training",
+            storageBucket: "marketer-training.appspot.com",
+            messagingSenderId: "846173040460",
+            appId: "1:846173040460:web:9e7116f51058b3535429e9"
+        };
+        const initialAuthToken = null; // Canvas環境の自動トークンを使用しない場合はnull
 
         let app;
+        // =========================================================================
+        
         let db;
         let auth;
         let userId = null;
         let tasks = []; // Local array to hold synchronized data
         let currentRole = 'trainee';
-        let selectedTaskDocId = null; // Changed from taskId to docId for Firestore
+        let selectedTaskDocId = null; 
 
         // --- Data Model ---
         const taskPresets = [
@@ -345,17 +347,25 @@ const initialAuthToken = null; // 通常、初回はnullでOK
         // --- Initialization and Authentication ---
         async function initializeAppAndAuth() {
             try {
+                // IMPORTANT: Check if config is valid before initializing
+                if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                    throw new Error("Firebase設定（apiKey/projectIdなど）が不完全です。有効な設定が必要です。");
+                }
+                
                 // Initialize Firebase services
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 setLogLevel('Debug'); // Enable debug logging for Firestore
 
-                // Use the custom token for authentication if available, otherwise sign in anonymously
+                // Use session persistence for robustness in web environments
                 await setPersistence(auth, browserSessionPersistence);
+                
+                // Use the custom token if provided (e.g., in a Canvas environment), otherwise sign in anonymously
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
+                    // Sign in anonymously for simple, persistent user tracking
                     await signInAnonymously(auth);
                 }
 
@@ -375,7 +385,7 @@ const initialAuthToken = null; // 通常、初回はnullでOK
                         document.getElementById('loading-indicator').classList.add('hidden');
 
                     } else {
-                        // Handle sign out or non-authenticated state
+                        // This block should ideally not be hit with anonymous sign-in, but is good practice.
                         userId = null;
                         document.getElementById('loading-indicator').classList.add('hidden');
                         document.getElementById('user-display').innerText = 'User: Not Signed In';
@@ -385,7 +395,7 @@ const initialAuthToken = null; // 通常、初回はnullでOK
 
             } catch (error) {
                 console.error("Firebase Initialization or Auth Error:", error);
-                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500">初期化エラー: ${error.message}. コンソールを確認してください。</p>`;
+                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
             }
         }
 
@@ -406,12 +416,12 @@ const initialAuthToken = null; // 通常、初回はnullでOK
                 // Set up the real-time listener
                 onSnapshot(q, (snapshot) => {
                     tasks = snapshot.docs.map(doc => ({
-                        docId: doc.id, // Firestore document ID
+                        docId: doc.id, 
                         ...doc.data()
                     }));
                     
-                    // Sort locally by date/day if needed, but for simplicity, we'll just use the fetched order.
-                    tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    // Sort locally by creation date for consistent ordering
+                    tasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
                     console.log("Data synchronized. Total tasks:", tasks.length);
                     renderTable();
@@ -438,7 +448,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
         }
 
         // --- Role Switching Logic ---
-        // エラー修正: switchRole関数をwindowにアタッチしてグローバルスコープからアクセス可能にする
         window.switchRole = function(role) {
             currentRole = role;
             
@@ -497,7 +506,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
                 let actionContent = '';
                 if(currentRole === 'mentor') {
                     if(!task.rating && task.status === '完了') {
-                        // openModal, closeModal, saveFeedbackもグローバル化します
                         actionContent = `<button onclick="window.openModal('${task.docId}')" class="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 shadow-sm">Review</button>`;
                     } else if (task.feedback) {
                          actionContent = `<span class="text-xs text-gray-400">Reviewed</span>`;
@@ -615,7 +623,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
             e.preventDefault();
             if (!userId) {
                 console.error("User is not authenticated. Cannot submit task.");
-                // Replace with custom UI alert
                 return;
             }
 
@@ -631,10 +638,10 @@ const initialAuthToken = null; // 通常、初回はnullでOK
                 outputUrl: '',
                 result: document.getElementById('input-result').value,
                 insight: document.getElementById('input-insight').value,
-                rating: null, // Always null on initial submission
-                feedback: null, // Always null on initial submission
-                skillTag: null, // Always null on initial submission
-                createdAt: new Date().toISOString() // Timestamp for sorting if needed
+                rating: null, 
+                feedback: null, 
+                skillTag: null, 
+                createdAt: new Date().toISOString() 
             };
 
             try {
@@ -648,7 +655,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
         });
 
         // Mentor: Open Modal
-        // エラー修正: windowにアタッチしてグローバルスコープからアクセス可能にする
         window.openModal = function(docId) {
             selectedTaskDocId = docId;
             const task = tasks.find(t => t.docId === docId);
@@ -664,7 +670,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
         }
 
         // Mentor: Close Modal
-        // エラー修正: windowにアタッチしてグローバルスコープからアクセス可能にする
         window.closeModal = function() {
             document.getElementById('feedback-modal').classList.add('hidden');
             document.getElementById('feedback-modal').classList.remove('flex');
@@ -672,7 +677,6 @@ const initialAuthToken = null; // 通常、初回はnullでOK
         }
 
         // Mentor: Save Feedback (Firestore updateDoc)
-        // エラー修正: windowにアタッチしてグローバルスコープからアクセス可能にする
         window.saveFeedback = async function() {
             if(!selectedTaskDocId) return;
             
@@ -692,8 +696,7 @@ const initialAuthToken = null; // 通常、初回はnullでOK
             }
         }
         
-        // --- CSV Export Logic (Remains the same, but uses synchronized 'tasks' array) ---
-        // エラー修正: windowにアタッチしてグローバルスコープからアクセス可能にする
+        // --- CSV Export Logic ---
         window.exportToCSV = function() {
             const separator = ',';
             
