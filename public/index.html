@@ -46,6 +46,15 @@
         .custom-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        .select-day-width {
+            width: 100%; /* 40日間対応で幅を調整 */
+            max-width: 120px;
+        }
+        @media (min-width: 768px) {
+            .select-day-width {
+                width: auto;
+            }
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -72,7 +81,6 @@
             
             <!-- Role Switcher for Demo Purposes -->
             <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                <!-- 修正: onclickハンドラはそのままにし、JS側で関数をグローバル化します -->
                 <button id="btn-role-trainee" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm bg-white text-gray-800" onclick="switchRole('trainee')">
                     <i class="fas fa-user-graduate mr-2"></i>Trainee
                 </button>
@@ -143,18 +151,15 @@
                     <h3 class="font-bold text-gray-800"><i class="fas fa-pen-nib mr-2 text-red-600"></i>本日のタスク報告 (Day Log)</h3>
                 </div>
                 <form id="task-form" class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 select-day-width">
                         <label class="block text-xs font-bold text-gray-500 mb-1">Day #</label>
+                        <!-- Day # Options will be populated by JS for 40 days -->
                         <select id="input-day" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border">
-                            <option value="Day 1">Day 1</option>
-                            <option value="Day 2">Day 2</option>
-                            <option value="Day 3">Day 3</option>
-                            <option value="Day 4">Day 4</option>
-                            <option value="Day 5">Day 5</option>
                         </select>
                     </div>
                     <div class="md:col-span-4">
                         <label class="block text-xs font-bold text-gray-500 mb-1">タスク名</label>
+                        <!-- Task Options will be populated by JS with new 40-day curriculum items -->
                         <select id="input-task" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border" required>
                             <!-- Options populated by JS -->
                         </select>
@@ -297,29 +302,30 @@
         </div>
     </div>
 
-        <!-- JavaScript Logic -->
+    <!-- JavaScript Logic -->
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =========================================================================
-        // --- Firebase Configuration ---
-        // Firestoreパスで使用するプロジェクトIDを明示的に定義
-        const PROJECT_ID_FOR_FIRESTORE_PATH = "marketer-training"; // ★★★ ここをあなたのプロジェクトIDに設定 ★★★
+        // --- Firebase Configuration (Canvas Environment Variables) ---
+        // Canvas環境のグローバル変数を優先し、未定義の場合のみフォールバック値を使用します。
+        const isCanvasEnvironment = typeof __firebase_config !== 'undefined';
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketer-training-fallback';
         
-        const firebaseConfig = {
-            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs", // あなたのapiKey
+        // Canvas環境の__firebase_configが存在する場合はそれをパースし、なければフォールバック値を使用
+        const firebaseConfig = isCanvasEnvironment ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs",
             authDomain: "marketer-training.firebaseapp.com",
             projectId: "marketer-training",
             storageBucket: "marketer-training.appspot.com",
             messagingSenderId: "846173040460",
-            appId: "1:846173040460:web:9e7116f51058b3535429e9", // あなたのWebアプリのappId
-            measurementId: "G-H77EX7CR5L" // measurementId の前にカンマを追加
+            appId: "1:846173040460:web:9e7116f51058b3535429e9"
         };
-        // initialAuthToken はnullのままでOK
-        const initialAuthToken = null; 
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let app;
         // =========================================================================
@@ -332,25 +338,67 @@
         let selectedTaskDocId = null; 
 
         // --- Data Model ---
+        // 楽天市場トップマーケター育成プログラム（40日間対応）のタスクリスト
         const taskPresets = [
-            '市場調査と競合分析',
-            'ターゲットペルソナ詳細定義',
-            '広告コピー3案作成',
-            'FV（ファーストビュー）デザイン指示書作成',
-            '日次データレポート作成',
-            'キャンペーン予算調整',
-            'その他タスク'
+            // フェーズ 1: 基礎とデータ分析 (Day 1-10)
+            '【D1】市場調査と競合分析レポート作成',
+            '【D2】ターゲットペルソナ詳細定義（3パターン）',
+            '【D3】日次KPIデータレポート作成と要因分析',
+            '【D4】過去キャンペーン実績データの整理と傾向分析',
+            '【D5】顧客セグメンテーション分析（RFM or LTV）',
+            '【D6】データ活用提案：未利用データの特定と利用計画',
+            '【D7】広告効果測定ロジック検証と改善案作成',
+            '【D8】データプライバシー保護に関する最新動向調査',
+            '【D9】ウェブ解析ツールの設定確認と活用戦略',
+            '【D10】基礎知識テストとメンターへのレビュー依頼',
+            
+            // フェーズ 2: 戦略と計画策定 (Day 11-20)
+            '【D11】年間マーケティング戦略の骨子策定',
+            '【D12】新規事業・サービスへの応用戦略提案',
+            '【D13】グループ連携によるクロスマーケティング案',
+            '【D14】キャンペーン予算配分計画の作成（媒体別）',
+            '【D15】広告配信媒体の選定ロジックと交渉戦略',
+            '【D16】顧客体験（CX）マップ作成とボトルネック特定',
+            '【D17】ブランドパーセプション調査計画の作成',
+            '【D18】メディアプランニング（認知〜獲得まで）',
+            '【D19】競合ブランドのSNS戦略分析と自社応用案',
+            '【D20】中期戦略レビューとフィードバック対応',
+            
+            // フェーズ 3: 実行とクリエイティブ (Day 21-30)
+            '【D21】広告コピー3案作成（ターゲット別訴求）',
+            '【D22】FV（ファーストビュー）デザイン指示書作成とレビュー',
+            '【D23】動画広告企画・構成案作成（15秒・30秒）',
+            '【D24】クリエイティブ検証計画策定（A/Bテスト変数定義）',
+            '【D25】LPO（ランディングページ最適化）提案書作成',
+            '【D26】オウンドメディア記事企画と初稿作成',
+            '【D27】インフルエンサーマーケティング連携企画案',
+            '【D28】SEOキーワード戦略の見直しと内部施策提案',
+            '【D29】メールマガジン（CRM）施策のシナリオ作成',
+            '【D30】クリエイティブ実行レビューと改善リスト作成',
+
+            // フェーズ 4: 高度化と総括 (Day 31-40)
+            '【D31】運用効率化のための自動化ツール導入提案',
+            '【D32】媒体レポーティングフォーマットの標準化と実装',
+            '【D33】景品表示法・薬機法チェックリスト作成とコンプライアンス遵守確認',
+            '【D34】ブランド価値向上施策の提案（NPS調査連動）',
+            '【D35】危機管理（炎上対策）シミュレーションとその対応フロー',
+            '【D36】マーケティング部門内でのナレッジ共有会企画',
+            '【D37】外部セミナー参加レポート作成と自社適用提案',
+            '【D38】40日間の総合評価（自己レビュー）資料作成',
+            '【D39】最終レポート発表資料作成（戦略・成果・課題）',
+            '【D40】最終プレゼンテーションと質疑応答準備',
+            'その他タスク' // フレキシブルなタスク用
         ];
 
         // --- Chart.js Instances (Global scope for updates) ---
         let timeChartInstance = null;
         let skillChartInstance = null;
         let ratingChartInstance = null;
+        const totalTrainingDays = 40; // 40日間に設定
 
         // --- Initialization and Authentication ---
         async function initializeAppAndAuth() {
             try {
-                // IMPORTANT: Check if config is valid before initializing
                 if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
                     throw new Error("Firebase設定（apiKey/projectIdなど）が不完全です。有効な設定が必要です。");
                 }
@@ -359,77 +407,132 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                setLogLevel('Debug'); // Enable debug logging for Firestore
+                setLogLevel('Debug'); 
 
-                // Use session persistence for robustness in web environments
-                // setPersistence と signInAnonymously を Promise チェーンで接続
-                await setPersistence(auth, browserSessionPersistence)
-                    .then(() => {
-                        console.warn("No Custom Token needed. Proceeding with Anonymous Sign-in...");
-                        return signInAnonymously(auth); // 匿名サインインを実行
-                    })
-                    .catch((error) => {
-                        // setPersistence または signInAnonymously 中のエラーをキャッチ
-                        console.error("Error setting persistence or during anonymous sign-in:", error);
-                        document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
-                        throw error; // 外側の catch ブロックにも伝播させる
-                    });
+                await setPersistence(auth, browserSessionPersistence);
+                
+                // Canvas環境のカスタムトークンを最優先
+                if (initialAuthToken) {
+                    console.log("Attempting sign-in with Custom Token...");
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    console.warn("No Custom Token found. Falling back to Anonymous Sign-in...");
+                    // 以前発生したauth/admin-restricted-operationエラーを回避するため、
+                    // ここでエラーが発生した場合は、認証に頼らない動作を検討します。
+                    // 現状は signInAnonymouslyを試行し、エラーハンドリングに任せます。
+                    await signInAnonymously(auth);
+                }
 
-                // Listen for authentication state changes
+                // 認証状態の監視
                 onAuthStateChanged(auth, (user) => {
+                    document.getElementById('loading-indicator').classList.add('hidden');
                     if (user) {
                         userId = user.uid;
                         document.getElementById('user-display').innerText = `User ID: ${userId}`;
                         console.log("Authenticated with UID:", userId);
                         
-                        // Start listening to the database after successful auth
+                        // Start listeners and UI updates
+                        populateDayDropdown(); // 40日間のDay #を生成
+                        populateTaskDropdown(); // 詳細なタスクリストを生成
                         startTaskListener();
-                        
-                        // Populate UI elements
-                        populateTaskDropdown();
-                        initCharts(); // Initialize charts structure
-                        document.getElementById('loading-indicator').classList.add('hidden');
+                        initCharts(); 
 
                     } else {
-                        // This block should ideally not be hit with anonymous sign-in, but is good practice.
                         userId = null;
-                        document.getElementById('loading-indicator').classList.add('hidden');
                         document.getElementById('user-display').innerText = 'User: Not Signed In';
                         console.error("Authentication failed or user signed out.");
+                        // 認証失敗時もUIは表示
+                        populateDayDropdown();
+                        populateTaskDropdown();
+                        initCharts();
                     }
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization or Auth Error (outer catch):", error);
+                console.error("Firebase Initialization or Auth Error:", error);
                 document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
+            }
+        }
+        
+        // --- Day Dropdown Population ---
+        function populateDayDropdown() {
+            const daySelect = document.getElementById('input-day');
+            daySelect.innerHTML = ''; 
+            for (let i = 1; i <= totalTrainingDays; i++) {
+                const option = document.createElement('option');
+                option.value = `Day ${i}`;
+                option.textContent = `Day ${i}`;
+                daySelect.appendChild(option);
+            }
+        }
+
+
+        // --- Helper to populate the Task Dropdown ---
+        function populateTaskDropdown() {
+            const taskSelect = document.getElementById('input-task');
+            taskSelect.innerHTML = ''; 
+            
+            // カテゴリごとにグループ化（オプションタグに`optgroup`を使用）
+            const categories = {
+                'フェーズ 1: 基礎とデータ分析 (Day 1-10)': ['【D1】市場調査と競合分析レポート作成', '【D2】ターゲットペルソナ詳細定義（3パターン）', '【D3】日次KPIデータレポート作成と要因分析', '【D4】過去キャンペーン実績データの整理と傾向分析', '【D5】顧客セグメンテーション分析（RFM or LTV）', '【D6】データ活用提案：未利用データの特定と利用計画', '【D7】広告効果測定ロジック検証と改善案作成', '【D8】データプライバシー保護に関する最新動向調査', '【D9】ウェブ解析ツールの設定確認と活用戦略', '【D10】基礎知識テストとメンターへのレビュー依頼'],
+                'フェーズ 2: 戦略と計画策定 (Day 11-20)': ['【D11】年間マーケティング戦略の骨子策定', '【D12】新規事業・サービスへの応用戦略提案', '【D13】グループ連携によるクロスマーケティング案', '【D14】キャンペーン予算配分計画の作成（媒体別）', '【D15】広告配信媒体の選定ロジックと交渉戦略', '【D16】顧客体験（CX）マップ作成とボトルネック特定', '【D17】ブランドパーセプション調査計画の作成', '【D18】メディアプランニング（認知〜獲得まで）', '【D19】競合ブランドのSNS戦略分析と自社応用案', '【D20】中期戦略レビューとフィードバック対応'],
+                'フェーズ 3: 実行とクリエイティブ (Day 21-30)': ['【D21】広告コピー3案作成（ターゲット別訴求）', '【D22】FV（ファーストビュー）デザイン指示書作成とレビュー', '【D23】動画広告企画・構成案作成（15秒・30秒）', '【D24】クリエイティブ検証計画策定（A/Bテスト変数定義）', '【D25】LPO（ランディングページ最適化）提案書作成', '【D26】オウンドメディア記事企画と初稿作成', '【D27】インフルエンサーマーケティング連携企画案', '【D28】SEOキーワード戦略の見直しと内部施策提案', '【D29】メールマガジン（CRM）施策のシナリオ作成', '【D30】クリエイティブ実行レビューと改善リスト作成'],
+                'フェーズ 4: 高度化と総括 (Day 31-40)': ['【D31】運用効率化のための自動化ツール導入提案', '【D32】媒体レポーティングフォーマットの標準化と実装', '【D33】景品表示法・薬機法チェックリスト作成とコンプライアンス遵守確認', '【D34】ブランド価値向上施策の提案（NPS調査連動）', '【D35】危機管理（炎上対策）シミュレーションとその対応フロー', '【D36】マーケティング部門内でのナレッジ共有会企画', '【D37】外部セミナー参加レポート作成と自社適用提案', '【D38】40日間の総合評価（自己レビュー）資料作成', '【D39】最終レポート発表資料作成（戦略・成果・課題）', '【D40】最終プレゼンテーションと質疑応答準備'],
+                'その他': ['その他タスク']
+            };
+
+            for (const category in categories) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                categories[category].forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task;
+                    option.textContent = task;
+                    optgroup.appendChild(option);
+                });
+                taskSelect.appendChild(optgroup);
             }
         }
 
         // --- Firestore Real-time Listener ---
         function getTasksCollectionRef() {
-            // Firestoreパスに PROJECT_ID_FOR_FIRESTORE_PATH を使用
-            if (!userId || !PROJECT_ID_FOR_FIRESTORE_PATH) {
-                throw new Error("UserID or PROJECT_ID_FOR_FIRESTORE_PATH is missing. Cannot access Firestore.");
+            if (!userId || !appId) {
+                 // 認証が完了していない場合やエラー時は仮の参照を返すかエラーをスロー
+                // 認証が必須のため、認証成功後にのみ呼び出すようにしています
+                throw new Error("UserID or AppID is missing. Cannot access Firestore.");
             }
-            // Private data path: /artifacts/{PROJECT_ID_FOR_FIRESTORE_PATH}/users/{userId}/tasks
-            const collectionPath = `artifacts/${PROJECT_ID_FOR_FIRESTORE_PATH}/users/${userId}/tasks`;
+            // Private data path: /artifacts/{appId}/users/{userId}/tasks
+            const collectionPath = `artifacts/${appId}/users/${userId}/tasks`;
             return collection(db, collectionPath);
         }
 
-
         function startTaskListener() {
+            // userIdがnullの場合はリスナーを設定しない
+            if (!userId) {
+                console.warn("Firestore listener skipped: User not authenticated.");
+                return;
+            }
+            
             try {
                 const q = query(getTasksCollectionRef());
 
-                // Set up the real-time listener
                 onSnapshot(q, (snapshot) => {
                     tasks = snapshot.docs.map(doc => ({
                         docId: doc.id, 
                         ...doc.data()
                     }));
                     
-                    // Sort locally by creation date for consistent ordering
-                    tasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    tasks.sort((a, b) => {
+                        // Day N のN部分を抽出してソート
+                        const dayA = parseInt(a.day.replace('Day ', '') || '0');
+                        const dayB = parseInt(b.day.replace('Day ', '') || '0');
+                        
+                        if (dayA !== dayB) {
+                            return dayA - dayB; // Day番号でソート
+                        }
+                        // 同じDay内で作成時刻でソート
+                        return new Date(a.createdAt) - new Date(b.createdAt);
+                    });
 
                     console.log("Data synchronized. Total tasks:", tasks.length);
                     renderTable();
@@ -443,17 +546,6 @@
             }
         }
 
-        // --- Helper to populate the Task Dropdown ---
-        function populateTaskDropdown() {
-            const taskSelect = document.getElementById('input-task');
-            taskSelect.innerHTML = ''; 
-            taskPresets.forEach(task => {
-                const option = document.createElement('option');
-                option.value = task;
-                option.textContent = task;
-                taskSelect.appendChild(option);
-            });
-        }
 
         // --- Role Switching Logic ---
         window.switchRole = function(role) {
@@ -567,7 +659,6 @@
 
         // --- Chart Logic ---
         function initCharts() {
-            // Check if charts are already initialized
             if (timeChartInstance) timeChartInstance.destroy();
             if (skillChartInstance) skillChartInstance.destroy();
             if (ratingChartInstance) ratingChartInstance.destroy();
@@ -580,11 +671,11 @@
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Skill Chart
+            // Skill Chart (Updated labels to be more relevant to Marketer)
             const ctxSkill = document.getElementById('skillChart').getContext('2d');
             skillChartInstance = new Chart(ctxSkill, {
                 type: 'doughnut',
-                data: { labels: ['時間管理', '戦略立案', 'クリエイティブ', '広告運用', 'データ分析'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa'] }] },
+                data: { labels: ['戦略立案', 'データ分析', 'クリエイティブ', '運用/実行力', 'コンプライアンス'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa'] }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
             });
 
@@ -609,8 +700,18 @@
             timeChartInstance.update();
 
             // Update Skill Chart
-            const skillCounts = { '時間管理': 0, '戦略立案': 0, 'クリエイティブ': 0, '広告運用': 0, 'データ分析': 0 };
-            tasks.forEach(t => { if(t.skillTag && skillCounts.hasOwnProperty(t.skillTag)) skillCounts[t.skillTag]++; });
+            // スキルタグの集計ロジックを更新されたラベルに合わせて修正
+            const skillLabels = ['戦略立案', 'データ分析', 'クリエイティブ', '運用/実行力', 'コンプライアンス'];
+            const skillCounts = { '戦略立案': 0, 'データ分析': 0, 'クリエイティブ': 0, '運用/実行力': 0, 'コンプライアンス': 0 };
+            tasks.forEach(t => { 
+                // 旧タグとの互換性も考慮しつつ、新しいタグベースで集計
+                const tag = t.skillTag;
+                if(skillLabels.includes(tag)) {
+                    skillCounts[tag]++; 
+                } else if (tag === '時間管理' || tag === '広告運用') {
+                    skillCounts['運用/実行力']++;
+                }
+            });
             skillChartInstance.data.datasets[0].data = Object.values(skillCounts);
             skillChartInstance.update();
 
@@ -631,6 +732,7 @@
             e.preventDefault();
             if (!userId) {
                 console.error("User is not authenticated. Cannot submit task.");
+                // 認証がない場合でもUIにエラーを表示することを検討
                 return;
             }
 
@@ -656,7 +758,7 @@
                 await addDoc(getTasksCollectionRef(), newTaskData);
                 console.log("Task successfully added to Firestore.");
                 e.target.reset();
-                populateTaskDropdown(); 
+                // populateTaskDropdown(); // リストは静的なので再生成不要
             } catch (error) {
                 console.error("Error adding document: ", error);
             }
@@ -670,7 +772,15 @@
             // Populate modal with existing data if available
             document.getElementById('modal-task-name').innerText = `${task.day}: ${task.name} (${task.date})`;
             document.getElementById('modal-rating').value = task.rating || '3';
-            document.getElementById('modal-tag').value = task.skillTag || '時間管理';
+            // スキルタグの初期値設定も更新されたリストに合わせて調整
+            document.getElementById('modal-tag').innerHTML = `
+                <option value="戦略立案">戦略立案</option>
+                <option value="データ分析">データ分析</option>
+                <option value="クリエイティブ">クリエイティブ</option>
+                <option value="運用/実行力">運用/実行力</option>
+                <option value="コンプライアンス">コンプライアンス</option>
+            `;
+            document.getElementById('modal-tag').value = task.skillTag || '運用/実行力'; // 初期値の調整
             document.getElementById('modal-feedback').value = task.feedback || '';
 
             document.getElementById('feedback-modal').classList.remove('hidden');
