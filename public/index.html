@@ -297,31 +297,29 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+        <!-- JavaScript Logic -->
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =========================================================================
-        // --- Firebase Configuration (Canvas Environment Variables) ---
-        // Canvas環境のグローバル変数を優先し、未定義の場合のみフォールバック値を使用します。
-        const isCanvasEnvironment = typeof __firebase_config !== 'undefined';
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketer-training-fallback';
+        // --- Firebase Configuration ---
+        // Firestoreパスで使用するプロジェクトIDを明示的に定義
+        const PROJECT_ID_FOR_FIRESTORE_PATH = "marketer-training"; // ★★★ ここをあなたのプロジェクトIDに設定 ★★★
         
-        // Canvas環境の__firebase_configが存在する場合はそれをパースし、なければユーザー提供の値をフォールバックとして使用
-        const firebaseConfig = isCanvasEnvironment ? JSON.parse(__firebase_config) : {
-            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs",
+        const firebaseConfig = {
+            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs", // あなたのapiKey
             authDomain: "marketer-training.firebaseapp.com",
             projectId: "marketer-training",
             storageBucket: "marketer-training.appspot.com",
             messagingSenderId: "846173040460",
-            appId: "1:846173040460:web:9e7116f51058b3535429e9"
-            measurementId: "G-H77EX7CR5L"
+            appId: "1:846173040460:web:9e7116f51058b3535429e9", // あなたのWebアプリのappId
+            measurementId: "G-H77EX7CR5L" // measurementId の前にカンマを追加
         };
-        const initialAuthToken = null;
+        // initialAuthToken はnullのままでOK
+        const initialAuthToken = null; 
         
         let app;
         // =========================================================================
@@ -364,16 +362,18 @@
                 setLogLevel('Debug'); // Enable debug logging for Firestore
 
                 // Use session persistence for robustness in web environments
-                await setPersistence(auth, browserSessionPersistence);
-                
-                // Use the custom token if provided (e.g., in a Canvas environment), otherwise sign in anonymously
-                if (initialAuthToken) {
-                    console.log("Attempting sign-in with Custom Token...");
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    console.warn("No Custom Token found. Falling back to Anonymous Sign-in...");
-                    await signInAnonymously(auth);
-                }
+                // setPersistence と signInAnonymously を Promise チェーンで接続
+                await setPersistence(auth, browserSessionPersistence)
+                    .then(() => {
+                        console.warn("No Custom Token needed. Proceeding with Anonymous Sign-in...");
+                        return signInAnonymously(auth); // 匿名サインインを実行
+                    })
+                    .catch((error) => {
+                        // setPersistence または signInAnonymously 中のエラーをキャッチ
+                        console.error("Error setting persistence or during anonymous sign-in:", error);
+                        document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
+                        throw error; // 外側の catch ブロックにも伝播させる
+                    });
 
                 // Listen for authentication state changes
                 onAuthStateChanged(auth, (user) => {
@@ -400,20 +400,22 @@
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization or Auth Error:", error);
+                console.error("Firebase Initialization or Auth Error (outer catch):", error);
                 document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
             }
         }
 
         // --- Firestore Real-time Listener ---
         function getTasksCollectionRef() {
-            if (!userId || !appId) {
-                throw new Error("UserID or AppID is missing. Cannot access Firestore.");
+            // Firestoreパスに PROJECT_ID_FOR_FIRESTORE_PATH を使用
+            if (!userId || !PROJECT_ID_FOR_FIRESTORE_PATH) {
+                throw new Error("UserID or PROJECT_ID_FOR_FIRESTORE_PATH is missing. Cannot access Firestore.");
             }
-            // Private data path: /artifacts/{appId}/users/{userId}/tasks
-            const collectionPath = `artifacts/${appId}/users/${userId}/tasks`;
+            // Private data path: /artifacts/{PROJECT_ID_FOR_FIRESTORE_PATH}/users/{userId}/tasks
+            const collectionPath = `artifacts/${PROJECT_ID_FOR_FIRESTORE_PATH}/users/${userId}/tasks`;
             return collection(db, collectionPath);
         }
+
 
         function startTaskListener() {
             try {
