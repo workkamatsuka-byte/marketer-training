@@ -27,3 +27,6 @@ dist/
 
 # Executables (if accidentally created here)
 *.exe
+
+# Ignore backup folder
+public/backup/
