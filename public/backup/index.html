@@ -1,89 +1,867 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakuten Marketer Training - Firebase Sync Feedback</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.6.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.6.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.6.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
-
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-    </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
         }
-      });
+        .rakuten-red {
+            color: #BF0000;
+        }
+        .bg-rakuten-red {
+            background-color: #BF0000;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 300px;
+            margin: 0 auto;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .select-day-width {
+            width: 100%; /* 40日間対応で幅を調整 */
+            max-width: 120px;
+        }
+        @media (min-width: 768px) {
+            .select-day-width {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Loading/Status Indicator -->
+    <div id="loading-indicator" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100] text-white">
+        <div class="flex flex-col items-center">
+            <i class="fas fa-sync-alt fa-spin text-4xl text-rakuten-red"></i>
+            <p class="mt-4 text-lg">データを読み込み中...</p>
+        </div>
+    </div>
+
+    <!-- Navigation / Header -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-rakuten-red text-white font-bold rounded-full w-10 h-10 flex items-center justify-center text-xl">R</div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-800 tracking-tight">Marketer Training <span class="text-gray-400 font-light">Feedback System</span></h1>
+                    <!-- Display User ID for Multi-user context -->
+                    <p id="user-display" class="text-xs text-gray-500 font-mono overflow-auto"></p>
+                </div>
+            </div>
+            
+            <!-- Role Switcher for Demo Purposes -->
+            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                <button id="btn-role-trainee" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm bg-white text-gray-800" onclick="switchRole('trainee')">
+                    <i class="fas fa-user-graduate mr-2"></i>Trainee
+                </button>
+                <button id="btn-role-mentor" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-gray-500 hover:text-gray-700" onclick="switchRole('mentor')">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>Mentor
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 space-y-8">
+
+        <!-- Introduction Section -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-2 border-l-4 border-red-600 pl-3">システム概要 (ウェブ運用版)</h2>
+            <p class="text-gray-600 leading-relaxed">
+                このバージョンはFirebaseに接続されており、**データは自動的にクラウドに保存・同期されます**。
+                メンターとトレーニーは、この画面を共有することでリアルタイムにフィードバック状況を確認できます。
+                <span class="font-bold text-red-700">「CSVダウンロード」</span>はデータのオフライン分析にご利用ください。
+            </p>
+        </section>
+
+        <!-- Analytics Dashboard -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Time Management Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-clock mr-2 text-blue-500"></i>時間管理精度 (Target vs Actual)</h3>
+                    <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded">直近5日間</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timeChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-400 mt-2 text-center">目標時間に対する超過/短縮を可視化</p>
+            </div>
+
+            <!-- Skill Growth Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-chart-pie mr-2 text-green-500"></i>スキル習得バランス</h3>
+                    <span class="text-xs bg-green-50 text-green-600 px-2 py-1 rounded">全期間</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="skillChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-400 mt-2 text-center">メンター評価に基づく成長領域の分布</p>
+            </div>
+
+            <!-- Rating Trend Chart -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700 text-sm"><i class="fas fa-star mr-2 text-yellow-500"></i>メンター評価推移</h3>
+                    <span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-1 rounded">Avg: <span id="avg-rating">0.0</span></span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="ratingChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-400 mt-2 text-center">日次タスクの完成度評価 (1-5)</p>
+            </div>
+        </section>
+
+        <!-- Action Area (Role Dependent) -->
+        <section id="action-area" class="bg-gradient-to-r from-gray-50 to-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-300">
+            <!-- Trainee View: Input Form -->
+            <div id="trainee-actions" class="block">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-pen-nib mr-2 text-red-600"></i>本日のタスク報告 (Day Log)</h3>
+                </div>
+                <form id="task-form" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div class="md:col-span-2 select-day-width">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Day #</label>
+                        <!-- Day # Options will be populated by JS for 40 days -->
+                        <select id="input-day" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border">
+                        </select>
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">タスク名</label>
+                        <!-- Task Options will be populated by JS with new 40-day curriculum items -->
+                        <select id="input-task" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border" required>
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">目標 (min)</label>
+                        <input type="number" id="input-target" placeholder="90" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">実測 (min)</label>
+                        <input type="number" id="input-actual" placeholder="105" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border">
+                    </div>
+                    <div class="md:col-span-2">
+                         <label class="block text-xs font-bold text-gray-500 mb-1">ステータス</label>
+                         <select id="input-status" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border">
+                            <option value="完了">完了</option>
+                            <option value="未完了">未完了</option>
+                            <option value="持ち越し">持ち越し</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-6">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">自己評価：成果 (Output)</label>
+                        <input type="text" id="input-result" placeholder="KPI達成度や成果物の状態" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border" required>
+                    </div>
+                    <div class="md:col-span-6">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">自己評価：気づき/課題 (Insight)</label>
+                        <input type="text" id="input-insight" placeholder="なぜ時間がかかったか？何を学んだか？" class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 text-sm p-2 border" required>
+                    </div>
+                    <div class="md:col-span-12 flex justify-end">
+                        <button type="submit" class="bg-rakuten-red text-white px-6 py-2 rounded shadow hover:bg-red-700 transition font-bold text-sm">
+                            <i class="fas fa-plus mr-2"></i>記録を追加 (Submit)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Mentor View: Feedback Input (Hidden by default) -->
+            <div id="mentor-actions" class="hidden">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-comment-dots mr-2 text-blue-600"></i>フィードバック入力 (Review Mode)</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-4 bg-blue-50 p-3 rounded border border-blue-100">
+                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                    下のリストから未評価のタスクを選択し、評価を入力してください。評価はリアルタイムでトレーニーに共有されます。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded border border-gray-200">
+                        <h4 class="font-bold text-sm text-gray-700 mb-2">評価基準ガイド</h4>
+                        <ul class="text-xs text-gray-500 space-y-1">
+                            <li><span class="font-bold text-gray-800">5 (完璧):</span> 期待値を大きく超え、独自の洞察がある。</li>
+                            <li><span class="font-bold text-gray-800">4 (良):</span> 時間内に高品質なアウトプットが出ている。</li>
+                            <li><span class="font-bold text-gray-800">3 (可):</span> 合格点だが、改善の余地あり。</li>
+                        </ul>
+                    </div>
+                    <div id="mentor-action-placeholder" class="bg-white p-4 rounded border border-gray-200 flex flex-col justify-center items-center text-center">
+                        <p class="text-sm text-gray-400 mb-2">タスクリストの「Review」ボタンを押してください</p>
+                        <button disabled class="bg-gray-200 text-gray-400 px-4 py-2 rounded text-sm font-bold cursor-not-allowed">
+                            評価入力フォームを開く
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detailed Task Log -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center">
+                <h3 class="font-bold text-gray-800 text-lg">タスク実行履歴 (Task History)</h3>
+                <div class="flex space-x-4 mt-2 md:mt-0">
+                    <button onclick="exportToCSV()" class="bg-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded hover:bg-gray-300 transition font-bold shadow-sm">
+                        <i class="fas fa-file-csv mr-2"></i>CSVダウンロード
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto custom-scroll">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                            <th class="px-4 py-3 font-semibold">Day / Date</th>
+                            <th class="px-4 py-3 font-semibold w-1/4">Task / Output</th>
+                            <th class="px-4 py-3 font-semibold text-center">Time (T/A)</th>
+                            <th class="px-4 py-3 font-semibold w-1/4">Self-Eval (Result & Insight)</th>
+                            <th class="px-4 py-3 font-semibold text-center">Status</th>
+                            <th class="px-4 py-3 font-semibold text-center w-32">Mentor Rating</th>
+                            <th class="px-4 py-3 font-semibold w-1/5">Feedback / Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body" class="text-sm text-gray-700 divide-y divide-gray-100">
+                        <!-- JS will populate rows here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Mentor Feedback -->
+    <div id="feedback-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+            <div class="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800">メンター評価入力</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">対象タスク</label>
+                    <p id="modal-task-name" class="text-sm font-bold text-gray-800">Task Name</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">評価 (1-5)</label>
+                        <select id="modal-rating" class="w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                            <option value="5">5 (完璧)</option>
+                            <option value="4">4 (良)</option>
+                            <option value="3">3 (可)</option>
+                            <option value="2">2 (要改善)</option>
+                            <option value="1">1 (再提出)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">スキルタグ</label>
+                        <select id="modal-tag" class="w-full border-gray-300 rounded-md shadow-sm p-2 border">
+                            <option value="時間管理">時間管理</option>
+                            <option value="戦略立案">戦略立案</option>
+                            <option value="クリエイティブ">クリエイティブ</option>
+                            <option value="広告運用">広告運用</option>
+                            <option value="データ分析">データ分析</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">フィードバックコメント</label>
+                    <textarea id="modal-feedback" rows="3" class="w-full border-gray-300 rounded-md shadow-sm p-2 border" placeholder="具体的なアクション指示を入力..."></textarea>
+                </div>
+                <div class="pt-2">
+                    <button onclick="saveFeedback()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">評価を保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, updateDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =========================================================================
+        // --- Firebase Configuration (Canvas Environment Variables) ---
+        // Canvas環境のグローバル変数を優先し、未定義の場合のみフォールバック値を使用します。
+        const isCanvasEnvironment = typeof __firebase_config !== 'undefined';
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketer-training-fallback';
+        
+        // Canvas環境の__firebase_configが存在する場合はそれをパースし、なければフォールバック値を使用
+        const firebaseConfig = isCanvasEnvironment ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBi5-PGKsVZi5RI9EqGcUbEZP1J7hWHWRs",
+            authDomain: "marketer-training.firebaseapp.com",
+            projectId: "marketer-training",
+            storageBucket: "marketer-training.appspot.com",
+            messagingSenderId: "846173040460",
+            appId: "1:846173040460:web:9e7116f51058b3535429e9"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let app;
+        // =========================================================================
+        
+        let db;
+        let auth;
+        let userId = null;
+        let tasks = []; // Local array to hold synchronized data
+        let currentRole = 'trainee';
+        let selectedTaskDocId = null; 
+
+        // --- Data Model ---
+        // 楽天市場トップマーケター育成プログラム（40日間対応）のタスクリスト
+        const taskPresets = [
+            // フェーズ 1: 基礎とデータ分析 (Day 1-10)
+            '【D1】市場調査と競合分析レポート作成',
+            '【D2】ターゲットペルソナ詳細定義（3パターン）',
+            '【D3】日次KPIデータレポート作成と要因分析',
+            '【D4】過去キャンペーン実績データの整理と傾向分析',
+            '【D5】顧客セグメンテーション分析（RFM or LTV）',
+            '【D6】データ活用提案：未利用データの特定と利用計画',
+            '【D7】広告効果測定ロジック検証と改善案作成',
+            '【D8】データプライバシー保護に関する最新動向調査',
+            '【D9】ウェブ解析ツールの設定確認と活用戦略',
+            '【D10】基礎知識テストとメンターへのレビュー依頼',
+            
+            // フェーズ 2: 戦略と計画策定 (Day 11-20)
+            '【D11】年間マーケティング戦略の骨子策定',
+            '【D12】新規事業・サービスへの応用戦略提案',
+            '【D13】グループ連携によるクロスマーケティング案',
+            '【D14】キャンペーン予算配分計画の作成（媒体別）',
+            '【D15】広告配信媒体の選定ロジックと交渉戦略',
+            '【D16】顧客体験（CX）マップ作成とボトルネック特定',
+            '【D17】ブランドパーセプション調査計画の作成',
+            '【D18】メディアプランニング（認知〜獲得まで）',
+            '【D19】競合ブランドのSNS戦略分析と自社応用案',
+            '【D20】中期戦略レビューとフィードバック対応',
+            
+            // フェーズ 3: 実行とクリエイティブ (Day 21-30)
+            '【D21】広告コピー3案作成（ターゲット別訴求）',
+            '【D22】FV（ファーストビュー）デザイン指示書作成とレビュー',
+            '【D23】動画広告企画・構成案作成（15秒・30秒）',
+            '【D24】クリエイティブ検証計画策定（A/Bテスト変数定義）',
+            '【D25】LPO（ランディングページ最適化）提案書作成',
+            '【D26】オウンドメディア記事企画と初稿作成',
+            '【D27】インフルエンサーマーケティング連携企画案',
+            '【D28】SEOキーワード戦略の見直しと内部施策提案',
+            '【D29】メールマガジン（CRM）施策のシナリオ作成',
+            '【D30】クリエイティブ実行レビューと改善リスト作成',
+
+            // フェーズ 4: 高度化と総括 (Day 31-40)
+            '【D31】運用効率化のための自動化ツール導入提案',
+            '【D32】媒体レポーティングフォーマットの標準化と実装',
+            '【D33】景品表示法・薬機法チェックリスト作成とコンプライアンス遵守確認',
+            '【D34】ブランド価値向上施策の提案（NPS調査連動）',
+            '【D35】危機管理（炎上対策）シミュレーションとその対応フロー',
+            '【D36】マーケティング部門内でのナレッジ共有会企画',
+            '【D37】外部セミナー参加レポート作成と自社適用提案',
+            '【D38】40日間の総合評価（自己レビュー）資料作成',
+            '【D39】最終レポート発表資料作成（戦略・成果・課題）',
+            '【D40】最終プレゼンテーションと質疑応答準備',
+            'その他タスク' // フレキシブルなタスク用
+        ];
+
+        // --- Chart.js Instances (Global scope for updates) ---
+        let timeChartInstance = null;
+        let skillChartInstance = null;
+        let ratingChartInstance = null;
+        const totalTrainingDays = 40; // 40日間に設定
+
+        // --- Initialization and Authentication ---
+        async function initializeAppAndAuth() {
+            try {
+                if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                    throw new Error("Firebase設定（apiKey/projectIdなど）が不完全です。有効な設定が必要です。");
+                }
+                
+                // Initialize Firebase services
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); 
+
+                await setPersistence(auth, browserSessionPersistence);
+                
+                // Canvas環境のカスタムトークンを最優先
+                if (initialAuthToken) {
+                    console.log("Attempting sign-in with Custom Token...");
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    console.warn("No Custom Token found. Falling back to Anonymous Sign-in...");
+                    // 以前発生したauth/admin-restricted-operationエラーを回避するため、
+                    // ここでエラーが発生した場合は、認証に頼らない動作を検討します。
+                    // 現状は signInAnonymouslyを試行し、エラーハンドリングに任せます。
+                    await signInAnonymously(auth);
+                }
+
+                // 認証状態の監視
+                onAuthStateChanged(auth, (user) => {
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('user-display').innerText = `User ID: ${userId}`;
+                        console.log("Authenticated with UID:", userId);
+                        
+                        // Start listeners and UI updates
+                        populateDayDropdown(); // 40日間のDay #を生成
+                        populateTaskDropdown(); // 詳細なタスクリストを生成
+                        startTaskListener();
+                        initCharts(); 
+
+                    } else {
+                        userId = null;
+                        document.getElementById('user-display').innerText = 'User: Not Signed In';
+                        console.error("Authentication failed or user signed out.");
+                        // 認証失敗時もUIは表示
+                        populateDayDropdown();
+                        populateTaskDropdown();
+                        initCharts();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Initialization or Auth Error:", error);
+                document.getElementById('loading-indicator').innerHTML = `<p class="text-red-500 text-center p-8">初期化エラー: ${error.message}<br>コンソールを確認し、設定値が正しいかを確認してください。</p>`;
+            }
+        }
+        
+        // --- Day Dropdown Population ---
+        function populateDayDropdown() {
+            const daySelect = document.getElementById('input-day');
+            daySelect.innerHTML = ''; 
+            for (let i = 1; i <= totalTrainingDays; i++) {
+                const option = document.createElement('option');
+                option.value = `Day ${i}`;
+                option.textContent = `Day ${i}`;
+                daySelect.appendChild(option);
+            }
+        }
+
+
+        // --- Helper to populate the Task Dropdown ---
+        function populateTaskDropdown() {
+            const taskSelect = document.getElementById('input-task');
+            taskSelect.innerHTML = ''; 
+            
+            // カテゴリごとにグループ化（オプションタグに`optgroup`を使用）
+            const categories = {
+                'フェーズ 1: 基礎とデータ分析 (Day 1-10)': ['【D1】市場調査と競合分析レポート作成', '【D2】ターゲットペルソナ詳細定義（3パターン）', '【D3】日次KPIデータレポート作成と要因分析', '【D4】過去キャンペーン実績データの整理と傾向分析', '【D5】顧客セグメンテーション分析（RFM or LTV）', '【D6】データ活用提案：未利用データの特定と利用計画', '【D7】広告効果測定ロジック検証と改善案作成', '【D8】データプライバシー保護に関する最新動向調査', '【D9】ウェブ解析ツールの設定確認と活用戦略', '【D10】基礎知識テストとメンターへのレビュー依頼'],
+                'フェーズ 2: 戦略と計画策定 (Day 11-20)': ['【D11】年間マーケティング戦略の骨子策定', '【D12】新規事業・サービスへの応用戦略提案', '【D13】グループ連携によるクロスマーケティング案', '【D14】キャンペーン予算配分計画の作成（媒体別）', '【D15】広告配信媒体の選定ロジックと交渉戦略', '【D16】顧客体験（CX）マップ作成とボトルネック特定', '【D17】ブランドパーセプション調査計画の作成', '【D18】メディアプランニング（認知〜獲得まで）', '【D19】競合ブランドのSNS戦略分析と自社応用案', '【D20】中期戦略レビューとフィードバック対応'],
+                'フェーズ 3: 実行とクリエイティブ (Day 21-30)': ['【D21】広告コピー3案作成（ターゲット別訴求）', '【D22】FV（ファーストビュー）デザイン指示書作成とレビュー', '【D23】動画広告企画・構成案作成（15秒・30秒）', '【D24】クリエイティブ検証計画策定（A/Bテスト変数定義）', '【D25】LPO（ランディングページ最適化）提案書作成', '【D26】オウンドメディア記事企画と初稿作成', '【D27】インフルエンサーマーケティング連携企画案', '【D28】SEOキーワード戦略の見直しと内部施策提案', '【D29】メールマガジン（CRM）施策のシナリオ作成', '【D30】クリエイティブ実行レビューと改善リスト作成'],
+                'フェーズ 4: 高度化と総括 (Day 31-40)': ['【D31】運用効率化のための自動化ツール導入提案', '【D32】媒体レポーティングフォーマットの標準化と実装', '【D33】景品表示法・薬機法チェックリスト作成とコンプライアンス遵守確認', '【D34】ブランド価値向上施策の提案（NPS調査連動）', '【D35】危機管理（炎上対策）シミュレーションとその対応フロー', '【D36】マーケティング部門内でのナレッジ共有会企画', '【D37】外部セミナー参加レポート作成と自社適用提案', '【D38】40日間の総合評価（自己レビュー）資料作成', '【D39】最終レポート発表資料作成（戦略・成果・課題）', '【D40】最終プレゼンテーションと質疑応答準備'],
+                'その他': ['その他タスク']
+            };
+
+            for (const category in categories) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                categories[category].forEach(task => {
+                    const option = document.createElement('option');
+                    option.value = task;
+                    option.textContent = task;
+                    optgroup.appendChild(option);
+                });
+                taskSelect.appendChild(optgroup);
+            }
+        }
+
+        // --- Firestore Real-time Listener ---
+        function getTasksCollectionRef() {
+            if (!userId || !appId) {
+                 // 認証が完了していない場合やエラー時は仮の参照を返すかエラーをスロー
+                // 認証が必須のため、認証成功後にのみ呼び出すようにしています
+                throw new Error("UserID or AppID is missing. Cannot access Firestore.");
+            }
+            // Private data path: /artifacts/{appId}/users/{userId}/tasks
+            const collectionPath = `artifacts/${appId}/users/${userId}/tasks`;
+            return collection(db, collectionPath);
+        }
+
+        function startTaskListener() {
+            // userIdがnullの場合はリスナーを設定しない
+            if (!userId) {
+                console.warn("Firestore listener skipped: User not authenticated.");
+                return;
+            }
+            
+            try {
+                const q = query(getTasksCollectionRef());
+
+                onSnapshot(q, (snapshot) => {
+                    tasks = snapshot.docs.map(doc => ({
+                        docId: doc.id, 
+                        ...doc.data()
+                    }));
+                    
+                    tasks.sort((a, b) => {
+                        // Day N のN部分を抽出してソート
+                        const dayA = parseInt(a.day.replace('Day ', '') || '0');
+                        const dayB = parseInt(b.day.replace('Day ', '') || '0');
+                        
+                        if (dayA !== dayB) {
+                            return dayA - dayB; // Day番号でソート
+                        }
+                        // 同じDay内で作成時刻でソート
+                        return new Date(a.createdAt) - new Date(b.createdAt);
+                    });
+
+                    console.log("Data synchronized. Total tasks:", tasks.length);
+                    renderTable();
+                    updateDashboard();
+                }, (error) => {
+                    console.error("Error listening to tasks collection:", error);
+                });
+
+            } catch (error) {
+                console.error("Failed to set up Firestore listener:", error);
+            }
+        }
+
+
+        // --- Role Switching Logic ---
+        window.switchRole = function(role) {
+            currentRole = role;
+            
+            const btnTrainee = document.getElementById('btn-role-trainee');
+            const btnMentor = document.getElementById('btn-role-mentor');
+            
+            if (role === 'trainee') {
+                btnTrainee.className = "px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm bg-white text-gray-800 border border-gray-200";
+                btnMentor.className = "px-4 py-1.5 rounded-md text-sm font-medium transition-all text-gray-500 hover:text-gray-700";
+                
+                document.getElementById('trainee-actions').classList.remove('hidden');
+                document.getElementById('mentor-actions').classList.add('hidden');
+            } else {
+                btnMentor.className = "px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm bg-blue-600 text-white border border-blue-600";
+                btnTrainee.className = "px-4 py-1.5 rounded-md text-sm font-medium transition-all text-gray-500 hover:text-gray-700";
+                
+                document.getElementById('trainee-actions').classList.add('hidden');
+                document.getElementById('mentor-actions').classList.remove('hidden');
+            }
+
+            renderTable(); // Re-render table to update action column based on role
+        }
+
+        // --- Rendering Logic (Uses local 'tasks' array which is updated by onSnapshot) ---
+        function renderTable() {
+            const tbody = document.getElementById('task-table-body');
+            tbody.innerHTML = '';
+
+            tasks.forEach(task => {
+                const tr = document.createElement('tr');
+                tr.className = "bg-white hover:bg-gray-50 transition-colors group";
+
+                let timeClass = "text-gray-500";
+                let timeDiff = 0;
+                const actualTime = task.actualTime !== null && task.actualTime !== undefined ? task.actualTime : null;
+                if(actualTime !== null) {
+                    timeDiff = actualTime - task.targetTime;
+                    if(timeDiff > 15) timeClass = "text-red-600 font-bold";
+                    else if (timeDiff < -10) timeClass = "text-blue-600 font-bold";
+                }
+
+                let stars = '';
+                if (task.rating) {
+                    for(let i=0; i<5; i++) {
+                        stars += i < task.rating ? '<i class="fas fa-star text-yellow-400 text-xs"></i>' : '<i class="far fa-star text-gray-300 text-xs"></i>';
+                    }
+                } else {
+                    stars = '<span class="text-xs text-gray-300">-</span>';
+                }
+
+                let statusBadge = '';
+                if(task.status === '完了') statusBadge = '<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">完了</span>';
+                else if(task.status === '未完了') statusBadge = '<span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-bold">未完了</span>';
+                else statusBadge = '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-bold">持ち越し</span>';
+
+                let actionContent = '';
+                if(currentRole === 'mentor') {
+                    if(!task.rating && task.status === '完了') {
+                        actionContent = `<button onclick="window.openModal('${task.docId}')" class="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 shadow-sm">Review</button>`;
+                    } else if (task.feedback) {
+                         actionContent = `<span class="text-xs text-gray-400">Reviewed</span>`;
+                    } else {
+                         actionContent = `<span class="text-xs text-gray-300">-</span>`;
+                    }
+                } else {
+                    if (task.feedback) {
+                        // Truncate feedback for table view
+                        const displayFeedback = task.feedback.length > 50 ? task.feedback.substring(0, 50) + '...' : task.feedback;
+                        actionContent = `<div class="text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-100 italic">"${displayFeedback}"</div>`;
+                    } else if (task.status !== '完了') {
+                         actionContent = `<span class="text-xs text-gray-400">要更新</span>`;
+                    } else {
+                         actionContent = `<span class="text-xs text-gray-300">-</span>`;
+                    }
+                }
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 border-b border-gray-100">
+                        <div class="font-bold text-gray-800 text-sm">${task.day}</div>
+                        <div class="text-xs text-gray-400">${task.date}</div>
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100">
+                        <div class="text-sm text-gray-800 font-medium">${task.name}</div>
+                        ${task.outputUrl ? `<a href="#" class="text-xs text-blue-500 hover:underline"><i class="fas fa-link mr-1"></i>Output Link</a>` : ''}
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100 text-center">
+                        <div class="text-xs text-gray-500">Target: ${task.targetTime}m</div>
+                        <div class="text-sm ${timeClass}">${actualTime !== null ? actualTime + 'm' : '--'}</div>
+                        ${actualTime !== null ? `<div class="text-[10px] ${timeDiff > 0 ? 'text-red-500' : 'text-blue-500'}">(${timeDiff > 0 ? '+' : ''}${timeDiff})</div>` : ''}
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100">
+                        <div class="text-xs text-gray-600 mb-1"><span class="font-bold text-gray-400">Result:</span> ${task.result}</div>
+                        <div class="text-xs text-gray-500 italic"><span class="font-bold text-gray-400">Insight:</span> ${task.insight}</div>
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100 text-center">
+                        ${statusBadge}
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100 text-center">
+                        <div class="flex justify-center space-x-0.5 mb-1">${stars}</div>
+                        ${task.skillTag ? `<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">${task.skillTag}</span>` : ''}
+                    </td>
+                    <td class="px-4 py-3 border-b border-gray-100">
+                        ${actionContent}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Chart Logic ---
+        function initCharts() {
+            if (timeChartInstance) timeChartInstance.destroy();
+            if (skillChartInstance) skillChartInstance.destroy();
+            if (ratingChartInstance) ratingChartInstance.destroy();
+
+            // Time Chart
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            timeChartInstance = new Chart(ctxTime, {
+                type: 'bar',
+                data: { labels: [], datasets: [ { label: 'Target', data: [], backgroundColor: '#e5e7eb', borderRadius: 4 }, { label: 'Actual', data: [], backgroundColor: '#BF0000', borderRadius: 4 } ] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Skill Chart (Updated labels to be more relevant to Marketer)
+            const ctxSkill = document.getElementById('skillChart').getContext('2d');
+            skillChartInstance = new Chart(ctxSkill, {
+                type: 'doughnut',
+                data: { labels: ['戦略立案', 'データ分析', 'クリエイティブ', '運用/実行力', 'コンプライアンス'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            });
+
+            // Rating Chart
+            const ctxRating = document.getElementById('ratingChart').getContext('2d');
+            ratingChartInstance = new Chart(ctxRating, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Rating', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', tension: 0.3, fill: true }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function updateDashboard() {
+            // Filter completed tasks with time data
+            const validTasks = tasks.filter(t => (t.status === '完了' || t.actualTime > 0) && t.targetTime > 0);
+            
+            // Update Time Chart (using only the last 5 logs for freshness)
+            const lastFive = validTasks.slice(-5);
+            timeChartInstance.data.labels = lastFive.map(t => t.day);
+            timeChartInstance.data.datasets[0].data = lastFive.map(t => t.targetTime);
+            timeChartInstance.data.datasets[1].data = lastFive.map(t => t.actualTime);
+            timeChartInstance.update();
+
+            // Update Skill Chart
+            // スキルタグの集計ロジックを更新されたラベルに合わせて修正
+            const skillLabels = ['戦略立案', 'データ分析', 'クリエイティブ', '運用/実行力', 'コンプライアンス'];
+            const skillCounts = { '戦略立案': 0, 'データ分析': 0, 'クリエイティブ': 0, '運用/実行力': 0, 'コンプライアンス': 0 };
+            tasks.forEach(t => { 
+                // 旧タグとの互換性も考慮しつつ、新しいタグベースで集計
+                const tag = t.skillTag;
+                if(skillLabels.includes(tag)) {
+                    skillCounts[tag]++; 
+                } else if (tag === '時間管理' || tag === '広告運用') {
+                    skillCounts['運用/実行力']++;
+                }
+            });
+            skillChartInstance.data.datasets[0].data = Object.values(skillCounts);
+            skillChartInstance.update();
+
+            // Update Rating Chart & Average
+            const ratedTasks = tasks.filter(t => t.rating !== null && t.rating !== undefined);
+            ratingChartInstance.data.labels = ratedTasks.map(t => t.day);
+            ratingChartInstance.data.datasets[0].data = ratedTasks.map(t => t.rating);
+            ratingChartInstance.update();
+
+            const avg = ratedTasks.length ? (ratedTasks.reduce((a, b) => a + b.rating, 0) / ratedTasks.length).toFixed(1) : '0.0';
+            document.getElementById('avg-rating').innerText = avg;
+        }
+
+        // --- Interaction Logic ---
+        
+        // Trainee: Add Task (Firestore addDoc)
+        document.getElementById('task-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!userId) {
+                console.error("User is not authenticated. Cannot submit task.");
+                // 認証がない場合でもUIにエラーを表示することを検討
+                return;
+            }
+
+            const actualTimeValue = document.getElementById('input-actual').value;
+            
+            const newTaskData = {
+                date: new Date().toLocaleDateString('ja-JP'),
+                day: document.getElementById('input-day').value,
+                name: document.getElementById('input-task').value,
+                targetTime: parseInt(document.getElementById('input-target').value),
+                actualTime: actualTimeValue ? parseInt(actualTimeValue) : null,
+                status: document.getElementById('input-status').value,
+                outputUrl: '',
+                result: document.getElementById('input-result').value,
+                insight: document.getElementById('input-insight').value,
+                rating: null, 
+                feedback: null, 
+                skillTag: null, 
+                createdAt: new Date().toISOString() 
+            };
+
+            try {
+                await addDoc(getTasksCollectionRef(), newTaskData);
+                console.log("Task successfully added to Firestore.");
+                e.target.reset();
+                // populateTaskDropdown(); // リストは静的なので再生成不要
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            }
+        });
+
+        // Mentor: Open Modal
+        window.openModal = function(docId) {
+            selectedTaskDocId = docId;
+            const task = tasks.find(t => t.docId === docId);
+            
+            // Populate modal with existing data if available
+            document.getElementById('modal-task-name').innerText = `${task.day}: ${task.name} (${task.date})`;
+            document.getElementById('modal-rating').value = task.rating || '3';
+            // スキルタグの初期値設定も更新されたリストに合わせて調整
+            document.getElementById('modal-tag').innerHTML = `
+                <option value="戦略立案">戦略立案</option>
+                <option value="データ分析">データ分析</option>
+                <option value="クリエイティブ">クリエイティブ</option>
+                <option value="運用/実行力">運用/実行力</option>
+                <option value="コンプライアンス">コンプライアンス</option>
+            `;
+            document.getElementById('modal-tag').value = task.skillTag || '運用/実行力'; // 初期値の調整
+            document.getElementById('modal-feedback').value = task.feedback || '';
+
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-modal').classList.add('flex');
+        }
+
+        // Mentor: Close Modal
+        window.closeModal = function() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            document.getElementById('feedback-modal').classList.remove('flex');
+            selectedTaskDocId = null;
+        }
+
+        // Mentor: Save Feedback (Firestore updateDoc)
+        window.saveFeedback = async function() {
+            if(!selectedTaskDocId) return;
+            
+            const updatedData = {
+                rating: parseInt(document.getElementById('modal-rating').value),
+                skillTag: document.getElementById('modal-tag').value,
+                feedback: document.getElementById('modal-feedback').value
+            };
+
+            try {
+                const taskDocRef = doc(getTasksCollectionRef(), selectedTaskDocId);
+                await updateDoc(taskDocRef, updatedData);
+                console.log("Feedback successfully updated in Firestore.");
+                closeModal();
+            } catch (error) {
+                console.error("Error updating document: ", error);
+            }
+        }
+        
+        // --- CSV Export Logic ---
+        window.exportToCSV = function() {
+            const separator = ',';
+            
+            // ヘッダー行 (スプレッドシートの列名として使用)
+            const headers = [
+                "Doc_ID", "記録日", "Day_#", "タスク名", "目標時間(min)", "実測時間(min)", 
+                "ステータス", "成果_自己評価", "気づき_課題", "メンター評価(1-5)", 
+                "スキルタグ", "メンターフィードバック"
+            ];
+
+            const csvRows = [];
+            csvRows.push(headers.join(separator));
+
+            // データ行の作成
+            tasks.forEach(task => {
+                const values = [
+                    task.docId,
+                    task.date,
+                    task.day,
+                    `"${String(task.name).replace(/"/g, '""')}"`,
+                    task.targetTime,
+                    task.actualTime || '', 
+                    task.status,
+                    `"${String(task.result).replace(/"/g, '""')}"`,
+                    `"${String(task.insight).replace(/"/g, '""')}"`,
+                    task.rating || '',
+                    task.skillTag || '',
+                    `"${String(task.feedback || '').replace(/"/g, '""')}"`
+                ];
+                csvRows.push(values.join(separator));
+            });
+
+            // CSVデータURIの作成 (UTF-8 BOM付き)
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvString], { type: 'text/csv;charset=utf-8;' }); 
+
+            // ダウンロードリンクを作成してクリック
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'rakuten_marketer_feedback_firestore_' + new Date().toISOString().slice(0, 10) + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Start the application setup
+        window.onload = initializeAppAndAuth;
     </script>
-  </body>
+</body>
 </html>
